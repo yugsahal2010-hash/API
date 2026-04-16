@@ -1,14 +1,17 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware 
+from fastapi.responses import FileResponse
 
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
-    allow_methods=["*"], 
-    allow_headers=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
 
 class MatchInput(BaseModel):
     current_score: int
@@ -47,3 +50,6 @@ def predict(match: MatchInput):
         "required_run_rate": round(rrr, 2),
         "prediction": prob_label
     }
+@app.get("/")
+async def read_index():
+    return FileResponse('index.html')
