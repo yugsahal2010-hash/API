@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WinPredictor Pro | Cricket Analytics</title>
+    <style>
+        :root {
+            --primary: #2ecc71;
+            --dark: #1a1a2e;
+            --glass: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h2 { margin-bottom: 1.5rem; color: var(--primary); letter-spacing: 2px; }
+
+        .input-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; font-size: 0.8rem; margin-bottom: 5px; color: #bbb; }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: white;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        input:focus { border-color: var(--primary); }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary);
+            border: none;
+            border-radius: 8px;
+            color: #1a1a2e;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        #result {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: none;
+        }
+
+        .prediction-text { font-size: 1.6rem; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
+        
+        /* Three column grid for stats */
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 8px; 
+        }
+
+        .stat-card { 
+            background: rgba(0,0,0,0.3); 
+            padding: 10px 5px; 
+            border-radius: 8px; 
+            font-size: 0.75rem; 
+            color: #bbb;
+        }
+
+        .stat-value { 
+            display: block; 
+            color: var(--primary); 
+            font-size: 1.1rem; 
+            font-weight: bold; 
+            margin-top: 5px; 
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>WIN PREDICTOR</h2>
+    
+    <div class="input-group">
+        <label>Current Score</label>
+        <input type="number" id="score" placeholder="e.g. 120">
+    </div>
+    <div class="input-group">
+        <label>Wickets Lost</label>
+        <input type="number" id="wickets" placeholder="0-10">
+    </div>
+    <div class="input-group">
+        <label>Overs Completed</label>
+        <input type="number" step="0.1" id="overs" placeholder="e.g. 12.4">
+    </div>
+    <div class="input-group">
+        <label>Target Score</label>
+        <input type="number" id="target" placeholder="e.g. 185">
+    </div>
+
+    <button onclick="predictWin()">ANALYZE MATCH</button>
+    
+    <div id="result">
+        <div id="pred-output" class="prediction-text">--</div>
+        <div class="stats-grid">
+            <div class="stat-card">Runs<br>Needed <span id="runs-val" class="stat-value">0</span></div>
+            <div class="stat-card">Balls<br>Left <span id="balls-val" class="stat-value">0</span></div>
+            <div class="stat-card">Req.<br>Rate <span id="rrr-val" class="stat-value">0</span></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function predictWin() {
+        const resultArea = document.getElementById('result');
+        const predText = document.getElementById('pred-output');
+        
+        const payload = {
+            current_score: parseInt(document.getElementById('score').value),
+            wickets: parseInt(document.getElementById('wickets').value),
+            overs_completed: parseFloat(document.getElementById('overs').value),
+            target: parseInt(document.getElementById('target').value)
+        };
+
+        if(Object.values(payload).some(isNaN)) {
+            alert("Fill all fields, bro!");
+            return;
+        }
+
+        predText.innerText = "Processing...";
+        resultArea.style.display = "block";
+
+        try {
+            const response = await fetch('https://api-fxhx.onrender.com/predict/win', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            
+            // Mapping the JSON keys from your MatchOutput class
+            predText.innerText = data.prediction;
+            document.getElementById('runs-val').innerText = data.runs_needed;
+            document.getElementById('balls-val').innerText = data.balls_remaining;
+            document.getElementById('rrr-val').innerText = data.required_run_rate;
+            
+        } catch (error) {
+            predText.innerText = "Connection Error";
+            console.error(error);
+        }
+    }
+</script>
+
+</body>
+</html>
